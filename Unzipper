@@ -1,0 +1,90 @@
+#!/bin/python
+
+import os
+import sys
+import zipfile
+import argparse
+
+class Unzipper:
+    """
+    Unzip files and change names, misc
+    """
+    def __init__(self):
+        parser = argparse.ArgumentParser(description="Manipulate Text Files")
+        parser.add_argument("-p", "--path", type=str, 
+                             help="Path to the directory housing the file")
+        parser.add_argument("-d", "--destination", type=str, default=os.getcwd(),
+                             help="Path to the output destination: Defaults to current directory")
+        parser.add_argument("-z", "--unzip", action="store_true",
+                             help="Unzip any compressed files inside path directory")
+        args = parser.parse_args()
+
+        # collect CLI arguements
+        if args.path == None:
+            parser.print_help()
+            print("\nPATH ERROR: please specify the zipfiles directory location")
+            sys.exit(1)
+
+        # parse for path
+        if os.path.isdir(args.path):
+            self.path = args.path
+            os.chdir(args.path)
+        else:
+            print("Directory not found... please check givin path.")
+            sys.exit(1)
+
+        # parse for destination
+        if os.path.isdir(args.destination):
+            self.dest = args.destination
+        else:
+            self.dest = os.getcwd()
+
+        # parse for unzip
+        if args.unzip == True:
+            self.unzip()
+
+#        print(args.path)
+#        print(self.path)
+#        print(args.destination)
+#        print(args.unzip)
+        
+    def unzip(self):
+        """
+        Unzip the file
+        """
+        ziplist = []
+        files = os.listdir(self.path)
+        # Create a list of all .zip files
+        for i in files:
+            if i.endswith('.zip'):
+                ziplist.append(i)
+
+        # Check for recursive .zip files
+        rec_ziplist = []
+        for i in ziplist:
+            with zipfile.ZipFile(i, 'r') as zip_f:
+                for i in zip_f.namelist():
+                    if i.endswith('.zip'):
+                        rec_ziplist.append(i)
+
+
+        # Check to see if any .zip files were found
+        if len(ziplist) == 0:
+            print("No zipfiles found")
+            sys.exit(1)
+
+        # Unzip parent list
+        for i in ziplist:
+            print("Extracting ->", i)
+            with zipfile.ZipFile(i, 'r') as zip_f:
+                zip_f.extractall(self.dest)
+
+        # Unzip Rec List
+        for i in rec_ziplist:
+            print("Extracting ->", i)
+            with zipfile.ZipFile(i, 'r') as zip_f:
+                zip_f.extractall(self.dest)
+
+
+if __name__ == "__main__":
+    exe = Unzipper()
